@@ -7,6 +7,7 @@ interface GitHubEvent {
     Branch: string;
     Message: string;
     Timestamp: string;
+    Repository?: string; // Track which repository was updated
 }
 
 export default function Dashboard() {
@@ -67,7 +68,8 @@ export default function Dashboard() {
         return (
             event.Pusher.toLowerCase().includes(query) ||
             event.Branch.toLowerCase().includes(query) ||
-            event.Message.toLowerCase().includes(query)
+            event.Message.toLowerCase().includes(query) ||
+            (event.Repository && event.Repository.toLowerCase().includes(query))
         );
     });
 
@@ -75,6 +77,7 @@ export default function Dashboard() {
     const totalCommits = events.length;
     const uniqueContributors = new Set(events.map((e) => e.Pusher)).size;
     const uniqueBranches = new Set(events.map((e) => e.Branch)).size;
+    const uniqueRepos = new Set(events.map((e) => e.Repository || 'Unknown')).size;
 
     const getInitials = (name: string) => {
         if (!name) return '?';
@@ -186,6 +189,18 @@ export default function Dashboard() {
                         <div className="metric-value">{uniqueBranches}</div>
                     </div>
                 </div>
+
+                <div className="metric-card">
+                    <div className="metric-icon-wrapper" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </div>
+                    <div className="metric-info">
+                        <h3>Tracked Repos</h3>
+                        <div className="metric-value">{uniqueRepos}</div>
+                    </div>
+                </div>
             </section>
 
             {/* Table Card container */}
@@ -221,6 +236,7 @@ export default function Dashboard() {
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th>Repository</th>
                                     <th>Developer</th>
                                     <th>Branch</th>
                                     <th>Commit Message</th>
@@ -230,6 +246,19 @@ export default function Dashboard() {
                             <tbody>
                                 {filteredEvents.map((event) => (
                                     <tr key={event.EventID}>
+                                        <td>
+                                            <span style={{
+                                                fontFamily: 'monospace',
+                                                fontSize: '0.825rem',
+                                                background: 'rgba(255, 255, 255, 0.04)',
+                                                padding: '4px 8px',
+                                                borderRadius: '6px',
+                                                border: '1px solid var(--border-color)',
+                                                color: '#e2e8f0'
+                                            }}>
+                                                {event.Repository || 'automated-serverless-data-tracker'}
+                                            </span>
+                                        </td>
                                         <td>
                                             <div className="pusher-cell">
                                                 <div className="avatar">
